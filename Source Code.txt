@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HubSpot Revenue Rescue — Scene-by-Scene Generator</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#0f1620;
+      --panel2:#0c121a;
+      --text:#e8eef6;
+      --muted:#9fb0c3;
+      --line:#1f2b3a;
+      --accent:#f28b2d;
+      --good:#29c17e;
+      --bad:#ff5c73;
+      --warn:#ffcc66;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --radius: 14px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 900px at 25% 0%, rgba(242,139,45,.08), transparent 55%),
+                  radial-gradient(1000px 800px at 85% 15%, rgba(41,193,126,.06), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      padding:24px 18px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(10px);
+    }
+    .wrap{max-width:1180px;margin:0 auto}
+    .top{
+      display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+    }
+    h1{margin:0;font-size:18px;letter-spacing:.2px}
+    .sub{margin-top:6px;color:var(--muted);font-size:13px;max-width:760px}
+    .pillbar{display:flex;gap:10px;flex-wrap:wrap}
+    .pill{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.02);
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .pill b{color:var(--text);font-weight:600}
+    main{padding:18px}
+    .grid{
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:16px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card h2{
+      margin:0;
+      padding:14px 14px;
+      font-size:13px;
+      letter-spacing:.3px;
+      text-transform:uppercase;
+      color:var(--muted);
+      border-bottom:1px solid var(--line);
+      background: rgba(0,0,0,.15);
+    }
+    .card .content{padding:14px}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    textarea, input, select{
+      width:100%;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.20);
+      color:var(--text);
+      border-radius: 12px;
+      padding:10px 12px;
+      outline:none;
+      font-family:var(--sans);
+    }
+    textarea{min-height:110px;resize:vertical;line-height:1.35}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    @media (max-width: 520px){
+      .row,.row3{grid-template-columns:1fr}
+    }
+    .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    button{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      padding:9px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-size:13px;
+    }
+    button.primary{
+      background: rgba(242,139,45,.18);
+      border-color: rgba(242,139,45,.45);
+    }
+    button.good{
+      background: rgba(41,193,126,.16);
+      border-color: rgba(41,193,126,.45);
+    }
+    button.danger{
+      background: rgba(255,92,115,.14);
+      border-color: rgba(255,92,115,.45);
+    }
+    button:hover{filter:brightness(1.08)}
+    .hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.35}
+    .scenes{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 980px){
+      .scenes{grid-template-columns:1fr}
+    }
+    .scene{
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      border-radius: 14px;
+      overflow:hidden;
+    }
+    .sceneHead{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+      background: rgba(0,0,0,.20);
+      gap:10px;
+    }
+    .sceneTitle{
+      display:flex; flex-direction:column;
+      gap:3px;
+    }
+    .sceneTitle .k{
+      font-size:12px; color:var(--accent); font-weight:700; letter-spacing:.3px;
+    }
+    .sceneTitle .t{
+      font-size:14px; font-weight:650;
+    }
+    .sceneMeta{
+      font-size:12px; color:var(--muted);
+      white-space:nowrap;
+    }
+    .sceneBody{padding:12px}
+    .mono{
+      font-family:var(--mono);
+      font-size:12px;
+      line-height:1.4;
+      white-space:pre-wrap;
+      border:1px dashed rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25);
+      border-radius: 12px;
+      padding:10px 12px;
+    }
+    .smallrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .tag{
+      font-size:11px;color:var(--muted);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:999px;
+      padding:6px 8px;
+      background: rgba(255,255,255,.02);
+    }
+    .status{
+      margin-top:10px;
+      font-size:12px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.22);
+      color:var(--muted);
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      line-height:1.35;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;margin-top:3px;background:var(--warn);
+      box-shadow: 0 0 0 4px rgba(255,204,102,.12);
+      flex:0 0 auto;
+    }
+    .dot.good{background:var(--good); box-shadow: 0 0 0 4px rgba(41,193,126,.12)}
+    .dot.bad{background:var(--bad); box-shadow: 0 0 0 4px rgba(255,92,115,.12)}
+    footer{
+      padding:22px 18px;
+      color:var(--muted);
+      border-top:1px solid var(--line);
+      margin-top:18px;
+      font-size:12px;
+    }
+    a{color:inherit}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="top">
+        <div>
+          <h1>HubSpot Revenue Rescue — Scene-by-Scene Generator</h1>
+          <div class="sub">
+            Generates a locked, judge-ready text-to-video script with executive visual cues.
+            This tool does <b>not</b> create video files; it outputs prompts and scene blocks you can paste into Nano Bananas / Canva / Pippit / Gamma.
+          </div>
+        </div>
+        <div class="pillbar">
+          <div class="pill"><b>Mode:</b> Locked Text</div>
+          <div class="pill"><b>Output:</b> Scene Blocks + Merged Prompt</div>
+          <div class="pill"><b>Aspect:</b> 16:9</div>
+          <div class="pill"><b>Length:</b> 90–100s</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      <!-- LEFT: Controls -->
+      <section class="card">
+        <h2>Generator Controls</h2>
+        <div class="content">
+          <div class="row">
+            <div>
+              <label>Platform Output</label>
+              <select id="platform">
+                <option value="pippit">Pippit (Merged Prompt)</option>
+                <option value="canva">Canva (Merged Prompt)</option>
+                <option value="nano">Nano Bananas (Scene-by-Scene + Global Prompt)</option>
+                <option value="gamma">Gamma (Merged Prompt)</option>
+              </select>
+            </div>
+            <div>
+              <label>Aspect Ratio</label>
+              <select id="aspect">
+                <option>16:9</option>
+                <option>9:16</option>
+                <option>1:1</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:10px" class="row">
+            <div>
+              <label>Target Duration</label>
+              <select id="duration">
+                <option>90–96 seconds</option>
+                <option>96–100 seconds</option>
+                <option>45–60 seconds (Judge Cut)</option>
+              </select>
+            </div>
+            <div>
+              <label>Music</label>
+              <select id="music">
+                <option>Optional subtle background music (low tempo)</option>
+                <option>No music</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:10px">
+            <label>Enterprise Visual Constraints (editable)</label>
+            <textarea id="style"></textarea>
+            <div class="hint">
+              Keep it strict: dark SaaS, high contrast, minimal motion, no cartoons, no hype.
+            </div>
+          </div>
+
+          <div class="btnrow">
+            <button class="primary" id="copyMerged">Copy Merged Prompt</button>
+            <button class="good" id="copyScenes">Copy Scene-by-Scene Blocks</button>
+            <button id="downloadJson">Download scenes.json</button>
+            <button class="danger" id="reset">Reset</button>
+          </div>
+
+          <div id="status" class="status" role="status" aria-live="polite">
+            <div class="dot" id="statusDot"></div>
+            <div>
+              <div id="statusText"><b>Ready.</b> Choose an output platform and copy your prompt.</div>
+              <div class="hint" style="margin-top:6px">
+                Tip: If a generator fails on long prompts, create two clips (0–48s, 48–96s) and stitch them.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Scenes -->
+      <section class="card">
+        <h2>Scenes (Locked Text + Visual Descriptions)</h2>
+        <div class="content">
+          <div class="scenes" id="scenes"></div>
+
+          <div style="margin-top:14px">
+            <label>Preview: Merged On-Screen Text Sequence (Locked)</label>
+            <div class="mono" id="mergedText"></div>
+          </div>
+
+          <div style="margin-top:14px">
+            <label>Preview: Platform Prompt Output</label>
+            <div class="mono" id="platformPrompt"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="wrap">
+    Built for hackathon submissions: prioritize <b>clarity</b>, <b>credibility</b>, and <b>execution posture</b>. If a tool rewrites text, regenerate and enforce the lock rule.
+  </footer>
+
+  <script>
+    // ---------- Locked scene data ----------
+    const SCENES = [
+      {
+        id: 1, title: "Opening Hook", time: "0–4s",
+        text: "Most AI agents answer questions.\nThis one makes revenue decisions.",
+        visual: "Dark abstract data grid emerging from black. Subtle neural-style connections forming a structured pattern. Slow, confident reveal. High contrast. No icons. No labels. Immediate executive authority."
+      },
+      {
+        id: 2, title: "The Problem", time: "4–9s",
+        text: "Revenue doesn’t disappear.\nIt leaks — silently — inside CRM systems.",
+        visual: "Stylized CRM pipeline viewed from above. Thin, controlled data streams flowing between stages. Small, subtle leak effects beneath the pipeline. Muted glow. No dramatic motion."
+      },
+      {
+        id: 3, title: "The Gap", time: "9–14s",
+        text: "Leads go inactive.\nDeals stall.\nFollow-ups fail.\nAnd no one quantifies the damage.",
+        visual: "Pipeline stages frozen in place. Timestamps incrementing quietly. Activity indicators fading. Follow-up task indicators dimming. Calm but uncomfortable stillness."
+      },
+      {
+        id: 4, title: "The Solution", time: "14–20s",
+        text: "HubSpot Revenue Rescue\nNo-Nonsense Growth Agent",
+        visual: "Clean title reveal on dark background. Soft light sweep across the center. No UI clutter. Product name centered with weight and space. Confident pause before transition."
+      },
+      {
+        id: 5, title: "What It Is", time: "20–26s",
+        text: "An AI Growth Director\ndesigned for HubSpot teams.\nNot a chatbot.\nNot analytics dashboards.",
+        visual: "Minimal HubSpot-style interface elements assembling into a clean layout. Precise alignment. Professional SaaS product feel. Calm motion."
+      },
+      {
+        id: 6, title: "What It Does", time: "26–34s",
+        text: "It detects revenue leaks.\nIt quantifies money at risk.\nIt prescribes execution — not advice.",
+        visual: "Data inputs on the left transform into structured decisions in the center, then into execution blocks on the right. Linear flow. Controlled transitions. No decorative effects."
+      },
+      {
+        id: 7, title: "Intelligence", time: "34–41s",
+        text: "Understands HubSpot deeply:\nLifecycle stages\nDeal pipelines\nLead status\nEngagement signals\nWorkflow automation",
+        visual: "Layered CRM components appearing one by one: lifecycle stage cards, pipeline columns, engagement indicators, automation nodes. Each element fades in with discipline and order."
+      },
+      {
+        id: 8, title: "Decision Logic", time: "41–48s",
+        text: "IF leads go inactive\n→ quantify revenue loss\nIF deals stall\n→ generate recovery workflows\nIF engagement drops\n→ trigger reactivation sequences",
+        visual: "Conditional logic paths visualized as clean arrows and branches. IF/THEN structure implied visually. White lines on dark background. Precision, not complexity."
+      },
+      {
+        id: 9, title: "Output Power", time: "48–55s",
+        text: "Outputs are always:\nCopy-ready HubSpot workflows\nExecution-ready email templates\nClear performance grades",
+        visual: "Structured documents snap into place: workflow blocks, email templates, grading cards. Sharp alignment. Subtle snap motion. No decorative effects."
+      },
+      {
+        id: 10, title: "Example Impact", time: "55–63s",
+        text: "240 inactive MQLs\n$1,100 average deal size\n12% close rate\n$31,680 in recoverable revenue",
+        visual: "Numbers appear sequentially with restrained animation. Calm numerical emphasis. Professional financial dashboard tone. No celebration effects."
+      },
+      {
+        id: 11, title: "Positioning", time: "63–70s",
+        text: "It behaves like a CRO —\nnot a support assistant.\nDecisive.\nDirect.\nRevenue-driven.",
+        visual: "Executive dashboard perspective. High-level overview of pipelines and decisions. Slight camera push-in. Confident, authoritative framing."
+      },
+      {
+        id: 12, title: "Why It Wins", time: "70–78s",
+        text: "No assumptions.\nNo fluff.\nNo generic advice.\nOnly actions that run inside HubSpot.",
+        visual: "Clean contrast scene. Background darkens slightly. Visual noise removed. Only essential elements remain. Strong negative space."
+      },
+      {
+        id: 13, title: "Scale", time: "78–85s",
+        text: "Built to scale across\nthousands of pipelines\nand enterprise-level CRM data.",
+        visual: "Grid of pipelines expanding outward. Data nodes multiplying in an organized pattern. Controlled scale-up. Enterprise magnitude without chaos."
+      },
+      {
+        id: 14, title: "Closing Statement", time: "85–92s",
+        text: "HubSpot Revenue Rescue\nNo-Nonsense Growth Agent",
+        visual: "Final brand lockup on dark background. Soft glow. Absolute stillness. Confident hold before fade."
+      },
+      {
+        id: 15, title: "Final Hook", time: "92–96s",
+        text: "Stop guessing.\nStart recovering revenue.",
+        visual: "Fade to near-black. Minimal residual glow. No additional elements. Clean, decisive end."
+      }
+    ];
+
+    const DEFAULT_STYLE = [
+      "Dark, modern, enterprise SaaS aesthetic.",
+      "High-contrast black / charcoal / deep gray palette.",
+      "CRM dashboards, pipelines, lifecycle stages, data streams.",
+      "Subtle motion graphics only: fade-ins, slide-ins, micro zoom (5–8%).",
+      "Never overcrowd the frame; clarity over density.",
+      "STRICTLY FORBIDDEN: cartoons, emojis, mascots, playful visuals, neon gradients, sci-fi clichés."
+    ].join("\n");
+
+    // ---------- Helpers ----------
+    const $ = (id) => document.getElementById(id);
+    function setStatus(kind, title, detail){
+      const dot = $("statusDot");
+      dot.classList.remove("good","bad");
+      if(kind === "good") dot.classList.add("good");
+      if(kind === "bad") dot.classList.add("bad");
+      const text = `<b>${escapeHtml(title)}</b> ${escapeHtml(detail || "")}`;
+      $("statusText").innerHTML = text;
+    }
+    function escapeHtml(str){
+      return (str||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+    }
+    function mergedOnScreenText(){
+      return SCENES.map(s => s.text).join("\n\n");
+    }
+    function makeMergedPrompt(platform){
+      const aspect = $("aspect").value;
+      const duration = $("duration").value;
+      const music = $("music").value;
+      const style = $("style").value.trim();
+
+      const lockRule =
+`CRITICAL TEXT LOCK:
+All on-screen text below MUST appear exactly as written.
+Do NOT rewrite, paraphrase, summarize, correct, or add narration.
+Do NOT reorder lines.`;
+
+      const header =
+`Create a ${duration} cinematic B2B product explainer video for:
+"HubSpot Revenue Rescue — No-Nonsense Growth Agent"
+Aspect ratio: ${aspect}
+Music: ${music}`;
+
+      const body = `ON-SCREEN TEXT (LOCKED):\n\n${mergedOnScreenText()}`;
+
+      // Platform-specific slight tuning (still one-file, deterministic)
+      if(platform === "nano"){
+        return [
+          "NANO BANANAS — LOCKED VIDEO PROMPT",
+          header,
+          lockRule,
+          "VISUAL STYLE:",
+          style,
+          "",
+          "SCENE STRUCTURE:",
+          SCENES.map(s =>
+            `Scene ${s.id} — ${s.title} (${s.time})\nOn-screen text:\n${s.text}\nVisual:\n${s.visual}`
+          ).join("\n\n---\n\n")
+        ].join("\n\n");
+      }
+
+      if(platform === "pippit"){
+        return [
+          header,
+          lockRule,
+          "STYLE:",
+          style,
+          "",
+          body,
+          "",
+          "Optional audio: subtle, low-tempo, modern background music only."
+        ].join("\n\n");
+      }
+
+      if(platform === "canva"){
+        return [
+          header,
+          lockRule,
+          "STYLE:",
+          style,
+          "",
+          "Use one scene per text block. Do not modify text.",
+          "",
+          body
+        ].join("\n\n");
+      }
+
+      // gamma
+      return [
+        header,
+        lockRule,
+        "STYLE:",
+        style,
+        "",
+        body
+      ].join("\n\n");
+    }
+
+    function makeScenesBlocks(){
+      return SCENES.map(s => {
+        return [
+          `SCENE ${s.id} — ${s.title} (${s.time})`,
+          "ON-SCREEN TEXT (LOCKED):",
+          s.text,
+          "",
+          "VISUAL DESCRIPTION:",
+          s.visual
+        ].join("\n");
+      }).join("\n\n====================\n\n");
+    }
+
+    async function copyToClipboard(text){
+      try{
+        await navigator.clipboard.writeText(text);
+        return true;
+      }catch(e){
+        // fallback
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok;
+      }
+    }
+
+    function download(filename, content, mime="application/json"){
+      const blob = new Blob([content], {type:mime});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // ---------- Render ----------
+    function renderScenes(){
+      const root = $("scenes");
+      root.innerHTML = "";
+      SCENES.forEach(s => {
+        const el = document.createElement("div");
+        el.className = "scene";
+        el.innerHTML = `
+          <div class="sceneHead">
+            <div class="sceneTitle">
+              <div class="k">SCENE ${s.id}</div>
+              <div class="t">${escapeHtml(s.title)}</div>
+            </div>
+            <div class="sceneMeta">${escapeHtml(s.time)}</div>
+          </div>
+          <div class="sceneBody">
+            <div class="smallrow">
+              <div class="tag">Locked Text</div>
+              <div class="tag">Enterprise Tone</div>
+              <div class="tag">Minimal Motion</div>
+            </div>
+            <div style="margin-top:10px">
+              <label>On-screen text</label>
+              <div class="mono">${escapeHtml(s.text)}</div>
+            </div>
+            <div style="margin-top:10px">
+              <label>Visual description</label>
+              <div class="mono">${escapeHtml(s.visual)}</div>
+            </div>
+          </div>
+        `;
+        root.appendChild(el);
+      });
+    }
+
+    function refreshOutputs(){
+      $("mergedText").textContent = mergedOnScreenText();
+      $("platformPrompt").textContent = makeMergedPrompt($("platform").value);
+    }
+
+    // ---------- Wire up ----------
+    function init(){
+      $("style").value = DEFAULT_STYLE;
+      renderScenes();
+      refreshOutputs();
+
+      $("platform").addEventListener("change", () => {
+        refreshOutputs();
+        setStatus("good","Updated.","Platform prompt regenerated.");
+      });
+      $("aspect").addEventListener("change", () => {
+        refreshOutputs();
+        setStatus("good","Updated.","Aspect ratio applied.");
+      });
+      $("duration").addEventListener("change", () => {
+        refreshOutputs();
+        setStatus("good","Updated.","Duration preset applied.");
+      });
+      $("music").addEventListener("change", () => {
+        refreshOutputs();
+        setStatus("good","Updated.","Music preference applied.");
+      });
+      $("style").addEventListener("input", () => {
+        refreshOutputs();
+      });
+
+      $("copyMerged").addEventListener("click", async () => {
+        const ok = await copyToClipboard(makeMergedPrompt($("platform").value));
+        setStatus(ok ? "good" : "bad", ok ? "Copied." : "Copy failed.", ok ? "Merged prompt is in your clipboard." : "Your browser blocked clipboard access.");
+      });
+
+      $("copyScenes").addEventListener("click", async () => {
+        const ok = await copyToClipboard(makeScenesBlocks());
+        setStatus(ok ? "good" : "bad", ok ? "Copied." : "Copy failed.", ok ? "Scene blocks are in your clipboard." : "Your browser blocked clipboard access.");
+      });
+
+      $("downloadJson").addEventListener("click", () => {
+        const payload = {
+          project: "HubSpot Revenue Rescue — No-Nonsense Growth Agent",
+          aspect: $("aspect").value,
+          duration: $("duration").value,
+          music: $("music").value,
+          style: $("style").value.trim(),
+          lock_rule: "Do not modify on-screen text. No rephrasing. No extra copy.",
+          scenes: SCENES
+        };
+        download("scenes.json", JSON.stringify(payload, null, 2));
+        setStatus("good","Downloaded.","scenes.json saved.");
+      });
+
+      $("reset").addEventListener("click", () => {
+        $("platform").value = "pippit";
+        $("aspect").value = "16:9";
+        $("duration").value = "90–96 seconds";
+        $("music").value = "Optional subtle background music (low tempo)";
+        $("style").value = DEFAULT_STYLE;
+        refreshOutputs();
+        setStatus("good","Reset.","Defaults restored.");
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
